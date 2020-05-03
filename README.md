@@ -7,6 +7,8 @@ This is Fork at https://github.com/howdoicomputer/vpn-indicator-shell-extension
 
 The extension adds an indicator to the menu with information about the active VPN or SNX connection.
 
+If you use SNX you can dissconnect it from context menu.
+
 Documentation for anyone stumbling across this repo:
 
 * http://smasue.github.io/gnome-shell-tw
