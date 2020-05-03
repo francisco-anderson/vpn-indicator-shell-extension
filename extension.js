@@ -3,6 +3,7 @@ const Main = imports.ui.main;
 const Lang = imports.lang;
 const Util = imports.misc.util;
 const PanelMenu = imports.ui.panelMenu;
+const PopupMenu = imports.ui.popupMenu;
 const Mainloop = imports.mainloop;
 const GLib = imports.gi.GLib;
 const Clutter = imports.gi.Clutter;
@@ -12,24 +13,36 @@ const VpnIndicator = new Lang.Class({
     Extends: PanelMenu.Button,
 
     _init: function() {
-        this.parent(0.0, "VPN Indicator", false);
+        this.parent(0.0, "VPN and SNX Indicator", false);
+        
         this.buttonText = new St.Label({
-            text: _("Loading..."),
             y_align: Clutter.ActorAlign.CENTER
         });
 
-        this.actor.add_actor(this.buttonText);
+        this.disconnectMenuItem = new PopupMenu.PopupMenuItem("Disconnect");
+        this.disconnectMenuItemClickId = this.disconnectMenuItem.connect('activate', Lang.bind(this, this._disconnectSNX));
+        this.menu.addMenuItem(this.disconnectMenuItem);
+        
         this._refresh();
     },
 
     _checkVPN: function() {
-        let [res, out, err, exit] = GLib.spawn_sync(null, ["/bin/bash", "-c", "ifconfig -a | grep -E '^(tun0|proton0)'"], null, GLib.SpawnFlags.SEARCH_PATH, null);
-
+        let [res, out, err, exit] = GLib.spawn_sync(null, ["/bin/bash", "-c", "ifconfig -a | grep -E '^(tun0|proton0)'"], null, GLib.SpawnFlags.SEARCH_PATH, null); 
         return exit;
     },
 
+    _checkSNX: function() {
+        let [res, out, err, exit] = GLib.spawn_sync(null, ["ip", "link", "show", "tunsnx"], null, GLib.SpawnFlags.SEARCH_PATH, null);  
+        return exit;
+    },
+
+    _disconnectSNX: function () {
+        GLib.spawn_async(null, ['snx', '-d'], null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+        this._refreshUI();
+    },
+
     _refresh: function() {
-        this._refreshUI(this._checkVPN());
+        this._refreshUI();
 
         if (this._timeout) {
             Mainloop.source_remove(this._timeout);
@@ -39,22 +52,26 @@ const VpnIndicator = new Lang.Class({
         this._timeout = Mainloop.timeout_add_seconds(2, Lang.bind(this, this._refresh));
     },
 
-    _refreshUI: function(data) {
-        var text = "VPN ";
+    _refreshUI: function() {
+        let check = this._checkVPN();
+        let snx = false;
+        if (check != 0) {
+           check = this._checkSNX();
+           snx = true; 
+        }   
+        
+        this.disconnectMenuItem.visible = check == 0 && snx;
 
-        if (data == 256) { // VPN is down
-            this.buttonText.set_style('color: #ffcc00; margin-top: 3px; margin-bottom: 0px;'); // orange
-            text += '\u2b07'; // down arrow (⬇)
-        } else if (data == 0) { // VPN is up
-            this.buttonText.set_style('color: #00ff99; margin-top: 3px; margin-bottom: 0px;'); // green
-            text += '\ud83d\udee1'; // shield (🛡)
-        } else { // error
-            this.buttonText.set_style('margin-top: 3px; margin-bottom: 0px;');
-            text += '\u2754'; // question mark (❔)
+        if (check == 0) { 
+            this.buttonText.set_style('color: #68A213; font-weight: bold; font-size: small;'); 
+            this.buttonText.set_text((snx ? 'SNX' : 'VPN') + ' Active');
+            this.actor.add_actor(this.buttonText);            
+        } else { 
+            this.buttonText.set_style('');
+            this.buttonText.set_text('');
+            this.actor.remove_actor(this.buttonText);
         }
-
-        this.buttonText.set_text(text);
-    }
+    }            
 });
 
 let twMenu;
