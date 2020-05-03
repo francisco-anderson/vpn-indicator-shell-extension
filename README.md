@@ -1,7 +1,6 @@
 ## VPN and SNX Indicator Extension
 
-![](img/snx-vpn.png) 
-![](img/standart-vpn.png)
+![](img/vpn.png) 
 
 This is Fork at https://github.com/howdoicomputer/vpn-indicator-shell-extension
 
