@@ -15,16 +15,27 @@ const VpnIndicator = new Lang.Class({
     _init: function() {
         this.parent(0.0, "VPN and SNX Indicator", false);
 
-        this.btn_vpn = new St.Label({
+        this.uiIcon = new St.Icon({
+            icon_name: 'network-vpn-symbolic',
+            style_class: 'system-status-icon',
+            style: 'color: #68A213;',            
+        });
+
+        this.uiBtnVPN = new St.Label({
             y_align: Clutter.ActorAlign.CENTER,
+            style_class: 'system-status-icon',
             style: 'color: #68A213; font-weight: bold; font-size: small; margin: 0px; padding: 0px;',            
             text: ''
         });
-        this.actor.add_actor(this.btn_vpn);
+
+        this.uiBox = new St.BoxLayout();
+        this.uiBox.add_actor(this.uiIcon);
+        this.uiBox.add_actor(this.uiBtnVPN);
+        this.add_actor(this.uiBox);
         
-        this.mi_snx_disconnect = new PopupMenu.PopupMenuItem("Disconnect SNX");
-        this.mi_snx_disconnect.connect('activate', Lang.bind(this, this._disconnectSNX));
-        this.menu.addMenuItem(this.mi_snx_disconnect);
+        this.uiMiDisconnectSNX = new PopupMenu.PopupMenuItem("Disconnect SNX");
+        this.uiMiDisconnectSNX.connect('activate', Lang.bind(this, this._disconnectSNX));
+        this.menu.addMenuItem(this.uiMiDisconnectSNX);
         
         Main.panel.addToStatusArea('vpn-snx-indicator', this);
 
@@ -56,25 +67,27 @@ const VpnIndicator = new Lang.Class({
         let check_standert_vpn = this._checkVPN();
         let check_snx_vpn = this._checkSNX();
                         
-        this.mi_snx_disconnect.visible = check_snx_vpn == 0;
+        this.uiMiDisconnectSNX.visible = check_snx_vpn == 0;
         this.visible = check_standert_vpn == 0 || check_snx_vpn == 0;
     
         if (check_standert_vpn + check_snx_vpn == 0) {
-            this.btn_vpn.set_text('SNX / VPN');
+            this.uiBtnVPN.set_text('SNX/VPN');
         } else if (check_standert_vpn == 0) {
-            this.btn_vpn.set_text('VPN');
+            this.uiBtnVPN.set_text('VPN');
         } else if (check_snx_vpn == 0) {
-            this.btn_vpn.set_text('SNX');
+            this.uiBtnVPN.set_text('SNX');
         } else {
-            this.btn_vpn.set_text('');
+            this.uiBtnVPN.set_text('');
         }
 
         return true;        
     },
 
     destroy() {
-        this.mi_snx_disconnect.destroy();
-        this.btn_vpn.destroy();
+        this.uiMiDisconnectSNX.destroy();
+        this.uiIcon.destroy();
+        this.uiBtnVPN.destroy();
+        this.uiBox.destroy();
 
         if (this._timer) {
             Mainloop.source_remove(this._timer);
