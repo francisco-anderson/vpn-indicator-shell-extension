@@ -18,13 +18,13 @@ const VpnIndicator = new Lang.Class({
         this.uiIcon = new St.Icon({
             icon_name: 'network-vpn-symbolic',
             style_class: 'system-status-icon',
-            style: 'color: #68A213;',            
+            style: 'color: #68A213;',
         });
 
         this.uiBtnVPN = new St.Label({
             y_align: Clutter.ActorAlign.CENTER,
             style_class: 'system-status-icon',
-            style: 'color: #68A213; font-weight: bold; font-size: small; margin: 0px; padding: 0px;',            
+            style: 'color: #68A213; font-weight: bold; font-size: small; margin: 0px; padding: 0px;',
             text: ''
         });
 
@@ -32,29 +32,29 @@ const VpnIndicator = new Lang.Class({
         this.uiBox.add_actor(this.uiIcon);
         this.uiBox.add_actor(this.uiBtnVPN);
         this.add_actor(this.uiBox);
-        
+
         this.uiMiDisconnectSNX = new PopupMenu.PopupMenuItem("Disconnect SNX");
         this.uiMiDisconnectSNX.connect('activate', Lang.bind(this, this._disconnectSNX));
         this.menu.addMenuItem(this.uiMiDisconnectSNX);
-        
+
         Main.panel.addToStatusArea('vpn-snx-indicator', this);
 
         this._refresh();
-        
+
         this._timer = Mainloop.timeout_add_seconds(2, Lang.bind(this, this._refresh));
     },
 
     _checkVPN: function() {
         let [res, out, err, exit] = GLib.spawn_sync(
-            null, ["/bin/bash", "-c", "ifconfig -a | grep -E '^(tun0|proton0)'"], null, GLib.SpawnFlags.SEARCH_PATH, null
-        ); 
+            null, ["/bin/bash", "-c", "ifconfig -a | grep -E '^(tun0|proton0|ppp0)'"], null, GLib.SpawnFlags.SEARCH_PATH, null
+        );
         return exit;
     },
 
     _checkSNX: function() {
         let [res, out, err, exit] = GLib.spawn_sync(
             null, ["ip", "link", "show", "tunsnx"], null, GLib.SpawnFlags.SEARCH_PATH, null
-        );  
+        );
         return exit;
     },
 
@@ -66,10 +66,10 @@ const VpnIndicator = new Lang.Class({
     _refresh() {
         let check_standert_vpn = this._checkVPN();
         let check_snx_vpn = this._checkSNX();
-                        
+
         this.uiMiDisconnectSNX.visible = check_snx_vpn == 0;
         this.visible = check_standert_vpn == 0 || check_snx_vpn == 0;
-    
+
         if (check_standert_vpn + check_snx_vpn == 0) {
             this.uiBtnVPN.set_text('SNX/VPN');
         } else if (check_standert_vpn == 0) {
@@ -80,7 +80,7 @@ const VpnIndicator = new Lang.Class({
             this.uiBtnVPN.set_text('');
         }
 
-        return true;        
+        return true;
     },
 
     destroy() {

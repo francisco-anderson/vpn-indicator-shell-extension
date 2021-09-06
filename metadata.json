@@ -2,9 +2,10 @@
     "uuid": "vpn-snx-indicator@als.kz",
     "shell-version": [
         "3.36.0",
-        "3.22.1",
-        "3.18.5"
+        "3.38",
+        "40.0"
     ],
+    "url": "https://github.com/alexeylovchikov/vpn-indicator-shell-extension",
     "name": "VPN and SNX Indicator",
-    "description": "A status indicator for a VPN or SNX connection."
+    "description": "A status indicator for a VPN and SNX(Check Point) connection."
 }
