@@ -1,19 +1,19 @@
+const { GObject } = imports.gi;
 const St = imports.gi.St;
 const Main = imports.ui.main;
-const Lang = imports.lang;
-const Util = imports.misc.util;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Mainloop = imports.mainloop;
 const GLib = imports.gi.GLib;
 const Clutter = imports.gi.Clutter;
 
-const VpnIndicator = new Lang.Class({
-    Name: 'VpnIndicator',
-    Extends: PanelMenu.Button,
+const VpnIndicator = GObject.registerClass({
+        GTypeName: 'VpnIndicator',
+        Signals: { 'activate': {} },
+    },  class VpnIndicator extends PanelMenu.Button {
 
-    _init: function() {
-        this.parent(0.0, "VPN and SNX Indicator", false);
+    _init(user) {
+        super._init(0.0, "VPN and SNX Indicator", false);
 
         this.uiIcon = new St.Icon({
             icon_name: 'network-vpn-symbolic',
@@ -34,34 +34,34 @@ const VpnIndicator = new Lang.Class({
         this.add_actor(this.uiBox);
 
         this.uiMiDisconnectSNX = new PopupMenu.PopupMenuItem("Disconnect SNX");
-        this.uiMiDisconnectSNX.connect('activate', Lang.bind(this, this._disconnectSNX));
+        this.uiMiDisconnectSNX.connect('activate', this._disconnectSNX.bind(this));
         this.menu.addMenuItem(this.uiMiDisconnectSNX);
 
         Main.panel.addToStatusArea('vpn-snx-indicator', this);
 
         this._refresh();
 
-        this._timer = Mainloop.timeout_add_seconds(2, Lang.bind(this, this._refresh));
-    },
+        this._timer = Mainloop.timeout_add_seconds(2, this._refresh.bind(this));
+    }
 
-    _checkVPN: function() {
+    _checkVPN() {
         let [res, out, err, exit] = GLib.spawn_sync(
             null, ["/bin/bash", "-c", "ifconfig -a | grep -E '^(tun0|proton0|ppp0)'"], null, GLib.SpawnFlags.SEARCH_PATH, null
         );
         return exit;
-    },
+    }
 
-    _checkSNX: function() {
+    _checkSNX() {
         let [res, out, err, exit] = GLib.spawn_sync(
             null, ["ip", "link", "show", "tunsnx"], null, GLib.SpawnFlags.SEARCH_PATH, null
         );
         return exit;
-    },
+    }
 
-    _disconnectSNX: function () {
+    _disconnectSNX() {
         GLib.spawn_async(null, ['snx', '-d'], null, GLib.SpawnFlags.SEARCH_PATH, null);
         this._refresh();
-    },
+    }
 
     _refresh() {
         let check_standert_vpn = this._checkVPN();
@@ -81,7 +81,7 @@ const VpnIndicator = new Lang.Class({
         }
 
         return true;
-    },
+    }
 
     destroy() {
         this.uiMiDisconnectSNX.destroy();
@@ -93,7 +93,7 @@ const VpnIndicator = new Lang.Class({
             Mainloop.source_remove(this._timer);
             this._timer = undefined;
         }
-        this.parent();
+        super.destroy();
     }
 });
 
@@ -107,6 +107,6 @@ function enable() {
 }
 
 function disable() {
-    indicator.destroy();
+    indicator?.destroy();
     indicator = null;
 }

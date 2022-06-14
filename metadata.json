@@ -3,7 +3,8 @@
     "shell-version": [
         "3.36.0",
         "3.38",
-        "40.0"
+        "40.0",
+        "42.1"
     ],
     "url": "https://github.com/alexeylovchikov/vpn-indicator-shell-extension",
     "name": "VPN and SNX Indicator",
